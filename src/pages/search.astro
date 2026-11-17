@@ -67,6 +67,6 @@ import { categories } from '../data/categories.js';
   .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
   .chip { text-decoration: none; padding: .45rem .9rem; font-size: .85rem; }
   .out { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 1rem; max-width: var(--read); }
-  .hit { display: grid; gap: .4rem; text-decoration: none; color: var(--text); }
-  .hit span { color: var(--muted); }
+  :global(.hit) { display: grid; gap: .4rem; text-decoration: none; color: var(--text); }
+  :global(.hit) span { color: var(--muted); }
 </style>
