@@ -1,10 +1,12 @@
 ---
 import '../styles/global.css';
+import { categories } from '../data/categories.js';
 const {
   title = 'TechOrbit',
   description = 'Clear, original technology journalism: AI, gadgets, apps and guides.',
 } = Astro.props;
 const year = new Date().getFullYear();
+const path = Astro.url.pathname;
 ---
 <!doctype html>
 <html lang="en" data-theme="light">
@@ -23,18 +25,54 @@ const year = new Date().getFullYear();
         }
       } catch (e) {}
     </script>
+    <style>
+      .nav-links { display: none; }
+      .nav-links a { color: var(--text); text-decoration: none; font-weight: 600; padding: .5rem .75rem; border-radius: 999px; }
+      .nav-links a:hover { background: var(--surface-2); }
+      .nav-links a[aria-current="page"] { background: var(--indigo-soft); color: var(--indigo); }
+      .right { display: flex; gap: .5rem; align-items: center; }
+      .menu-btn { display: grid; }
+      .mobile-menu { display: none; border-top: 1px solid var(--line); padding: .5rem 0 1rem; }
+      .mobile-menu.open { display: block; }
+      .mobile-menu a { display: block; padding: .75rem .25rem; color: var(--text); text-decoration: none; font-weight: 600; border-bottom: 1px solid var(--line); }
+      .mobile-menu a[aria-current="page"] { color: var(--indigo); }
+      @media (min-width: 860px) {
+        .nav-links { display: flex; gap: .25rem; }
+        .menu-btn { display: none; }
+        .mobile-menu, .mobile-menu.open { display: none; }
+      }
+    </style>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
     <header class="site-header">
       <div class="wrap bar">
         <a class="logo" href="/" aria-label="TechOrbit home">Tech<span class="o">O<span class="orbit" aria-hidden="true"></span></span>rbit</a>
-        <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to dark mode">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <circle cx="12" cy="12" r="9"></circle>
-            <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"></path>
-          </svg>
-        </button>
+        <nav class="nav-links" aria-label="Main">
+          {categories.map((c) => (
+            <a href={`/category/${c.slug}/`} aria-current={path.startsWith(`/category/${c.slug}`) ? 'page' : undefined}>{c.name}</a>
+          ))}
+        </nav>
+        <div class="right">
+          <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch to dark mode">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"></path>
+            </svg>
+          </button>
+          <button id="menu-btn" class="icon-btn menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 7h16M4 12h16M4 17h16"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="wrap">
+        <nav id="mobile-menu" class="mobile-menu" aria-label="Mobile">
+          {categories.map((c) => (
+            <a href={`/category/${c.slug}/`} aria-current={path.startsWith(`/category/${c.slug}`) ? 'page' : undefined}>{c.name}</a>
+          ))}
+        </nav>
       </div>
     </header>
     <main id="main"><slot /></main>
@@ -55,6 +93,13 @@ const year = new Date().getFullYear();
         sync();
       });
       sync();
+      const mbtn = document.getElementById('menu-btn');
+      const menu = document.getElementById('mobile-menu');
+      mbtn.addEventListener('click', () => {
+        const open = menu.classList.toggle('open');
+        mbtn.setAttribute('aria-expanded', String(open));
+        mbtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      });
     </script>
   </body>
 </html>

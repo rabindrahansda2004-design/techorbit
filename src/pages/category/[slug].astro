@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { categories } from '../../data/categories.js';
+
+export function getStaticPaths() {
+  return categories.map((c) => ({ params: { slug: c.slug }, props: { category: c } }));
+}
+const { category } = Astro.props;
+---
+<BaseLayout title={`${category.name} | TechOrbit`} description={category.blurb}>
+  <div class="wrap" style="padding-top:2.5rem">
+    <nav aria-label="Breadcrumb" style="font-size:.9rem;color:var(--muted);margin-bottom:1rem">
+      <a href="/">Home</a> / <span>{category.name}</span>
+    </nav>
+    <span class="tag">Category</span>
+    <h1 style="margin-top:1rem">{category.name}</h1>
+    <p style="max-width:var(--read);color:var(--muted)">{category.blurb}</p>
+    <div class="card" style="max-width:var(--read)">
+      <p style="margin:0">No articles in this category yet. Check back soon.</p>
+    </div>
+  </div>
+</BaseLayout>
