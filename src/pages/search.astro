@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { categories } from '../data/categories.js';
+---
+<BaseLayout title="Search | TechOrbit" description="Search TechOrbit articles by topic or keyword.">
+  <div class="wrap" style="padding-top:2rem">
+    <h1>Search</h1>
+    <form id="f" role="search" class="sf">
+      <label for="q" class="sr">Search articles</label>
+      <input id="q" type="search" placeholder="Search articles..." autocomplete="off" />
+    </form>
+    <div id="sugg">
+      <p class="muted">Browse a topic:</p>
+      <div class="chips">
+        {categories.map((c) => <a class="tag chip" href={`/category/${c.slug}/`}>{c.name}</a>)}
+      </div>
+    </div>
+    <p id="status" class="muted" aria-live="polite"></p>
+    <ul id="out" class="out"></ul>
+  </div>
+  <script>
+    const input = document.getElementById('q');
+    const out = document.getElementById('out');
+    const sugg = document.getElementById('sugg');
+    const status = document.getElementById('status');
+    let data = [];
+    function run() {
+      const q = input.value.trim().toLowerCase();
+      out.replaceChildren();
+      status.textContent = '';
+      sugg.hidden = q.length > 0;
+      if (!q) return;
+      const terms = q.split(/\s+/);
+      const hits = data.filter((a) => terms.every((t) => (a.title + ' ' + a.description + ' ' + a.category).toLowerCase().includes(t)));
+      status.textContent = hits.length ? hits.length + ' result' + (hits.length > 1 ? 's' : '') : 'No results. Try a different word.';
+      hits.forEach((a) => {
+        const li = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = a.url;
+        link.className = 'card hit';
+        const t = document.createElement('strong');
+        t.textContent = a.title;
+        const d = document.createElement('span');
+        d.textContent = a.description;
+        link.append(t, d);
+        li.append(link);
+        out.append(li);
+      });
+    }
+    input.addEventListener('input', run);
+    document.getElementById('f').addEventListener('submit', (e) => e.preventDefault());
+    fetch('/search.json')
+      .then((r) => r.json())
+      .then((d) => {
+        data = d;
+        const q = new URLSearchParams(location.search).get('q');
+        if (q) input.value = q;
+        run();
+      })
+      .catch(() => { status.textContent = 'Search is unavailable right now.'; });
+  </script>
+</BaseLayout>
+<style>
+  .sr { position: absolute; left: -999px; }
+  .sf input { width: 100%; font: inherit; padding: .9rem 1.1rem; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+  .muted { color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .chip { text-decoration: none; padding: .45rem .9rem; font-size: .85rem; }
+  .out { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 1rem; max-width: var(--read); }
+  .hit { display: grid; gap: .4rem; text-decoration: none; color: var(--text); }
+  .hit span { color: var(--muted); }
+</style>
