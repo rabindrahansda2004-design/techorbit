@@ -1,16 +1,21 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="TechOrbit: Technology, explained clearly">
+  <div class="wrap" style="padding-top:2.5rem">
+    <span class="tag">Design test</span>
+    <h1 style="margin-top:1rem">Technology, explained clearly.</h1>
+    <p style="max-width:var(--read);color:var(--muted)">
+      This is a temporary page to check our colors, typography and dark mode. The real homepage comes next.
+    </p>
+    <p style="display:flex;gap:.75rem;flex-wrap:wrap">
+      <a class="btn" href="/">Primary button</a>
+      <a class="btn ghost" href="/">Secondary button</a>
+    </p>
+    <div class="card" style="max-width:var(--read)">
+      <span class="tag">AI Tools</span>
+      <h2 style="margin-top:.75rem">A sample article card</h2>
+      <p style="color:var(--muted);margin:0">Cards, tags and text should stay readable in both light and dark mode.</p>
+    </div>
+  </div>
+</BaseLayout>
