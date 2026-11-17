@@ -1,0 +1,77 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { categories } from '../../data/categories.js';
+
+export async function getStaticPaths() {
+  const all = await getCollection('articles', ({ data }) => !data.draft);
+  return all.map((entry) => ({ params: { slug: entry.id }, props: { entry, all } }));
+}
+
+const { entry, all } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const cat = categories.find((c) => c.slug === d.category);
+const date = d.pubDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const related = all
+  .filter((a) => a.id !== entry.id)
+  .sort((a, b) => Number(b.data.category === d.category) - Number(a.data.category === d.category) || b.data.pubDate - a.data.pubDate)
+  .slice(0, 3);
+---
+<BaseLayout title={`${d.title} | TechOrbit`} description={d.description}>
+  <div id="progress" aria-hidden="true"></div>
+  <article class="wrap article">
+    <nav aria-label="Breadcrumb" class="crumbs">
+      <a href="/">Home</a> / <a href={`/category/${d.category}/`}>{cat?.name}</a> / <span>Article</span>
+    </nav>
+    <span class="tag">{cat?.name}</span>
+    <h1 style="margin-top:1rem">{d.title}</h1>
+    <p class="meta">Published {date}</p>
+    <div class="prose"><Content /></div>
+    {d.sources.length > 0 && (
+      <section class="sources">
+        <h2>Sources</h2>
+        <ul>{d.sources.map((s) => <li><a href={s.url} rel="noopener noreferrer">{s.title}</a></li>)}</ul>
+      </section>
+    )}
+  </article>
+  {related.length > 0 && (
+    <section class="wrap related">
+      <h2>Related articles</h2>
+      <div class="rel-grid">
+        {related.map((r) => (
+          <a class="card rel-card" href={`/articles/${r.id}/`}>
+            <span class="tag">{categories.find((c) => c.slug === r.data.category)?.name}</span>
+            <strong>{r.data.title}</strong>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+  <script>
+    const bar = document.getElementById('progress');
+    function update() {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const pct = max > 0 ? Math.min(100, (h.scrollTop / max) * 100) : 0;
+      bar.style.width = pct + '%';
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  </script>
+</BaseLayout>
+<style>
+  #progress { position: fixed; top: 0; left: 0; height: 4px; width: 0; background: var(--lime); z-index: 60; }
+  .article { padding-top: 2rem; }
+  .crumbs { font-size: .9rem; color: var(--muted); margin-bottom: 1rem; }
+  .meta { color: var(--muted); font-size: .95rem; }
+  .prose { max-width: var(--read); }
+  .prose :global(h2) { margin-top: 2rem; }
+  .prose :global(ul) { padding-left: 1.25rem; }
+  .sources { max-width: var(--read); border-top: 1px solid var(--line); margin-top: 2rem; padding-top: 1rem; }
+  .related { margin-top: 3rem; }
+  .rel-grid { display: grid; gap: 1rem; }
+  .rel-card { display: grid; gap: .6rem; text-decoration: none; color: var(--text); transition: transform .15s ease; }
+  .rel-card:hover { transform: translateY(-2px); }
+  @media (min-width: 760px) { .rel-grid { grid-template-columns: repeat(3, 1fr); } }
+</style>

@@ -1,21 +1,67 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { categories } from '../data/categories.js';
+
+const all = (await getCollection('articles', ({ data }) => !data.draft)).sort((a, b) => b.data.pubDate - a.data.pubDate);
+const featured = all.find((a) => a.data.featured) ?? all[0];
+const latest = all.filter((a) => a.id !== featured?.id).slice(0, 6);
+const name = (slug) => categories.find((c) => c.slug === slug)?.name;
+const sections = categories
+  .map((c) => ({ c, items: all.filter((a) => a.data.category === c.slug).slice(0, 3) }))
+  .filter((s) => s.items.length > 0);
+const fmt = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 ---
 <BaseLayout title="TechOrbit: Technology, explained clearly">
-  <div class="wrap" style="padding-top:2.5rem">
-    <span class="tag">Design test</span>
-    <h1 style="margin-top:1rem">Technology, explained clearly.</h1>
-    <p style="max-width:var(--read);color:var(--muted)">
-      This is a temporary page to check our colors, typography and dark mode. The real homepage comes next.
-    </p>
-    <p style="display:flex;gap:.75rem;flex-wrap:wrap">
-      <a class="btn" href="/">Primary button</a>
-      <a class="btn ghost" href="/">Secondary button</a>
-    </p>
-    <div class="card" style="max-width:var(--read)">
-      <span class="tag">AI Tools</span>
-      <h2 style="margin-top:.75rem">A sample article card</h2>
-      <p style="color:var(--muted);margin:0">Cards, tags and text should stay readable in both light and dark mode.</p>
-    </div>
+  <div class="wrap home">
+    {!featured && <div class="card"><p style="margin:0">No articles published yet. Check back soon.</p></div>}
+    {featured && (
+      <a class="hero card" href={`/articles/${featured.id}/`}>
+        <span class="tag">Featured · {name(featured.data.category)}</span>
+        <h1>{featured.data.title}</h1>
+        <p class="lead">{featured.data.description}</p>
+        <span class="meta">{fmt(featured.data.pubDate)}</span>
+      </a>
+    )}
+    {latest.length > 0 && (
+      <section>
+        <h2>Latest</h2>
+        <div class="grid">
+          {latest.map((a) => (
+            <a class="card item" href={`/articles/${a.id}/`}>
+              <span class="tag">{name(a.data.category)}</span>
+              <strong>{a.data.title}</strong>
+              <span class="meta">{fmt(a.data.pubDate)}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+    {sections.map((s) => (
+      <section>
+        <div class="row"><h2>{s.c.name}</h2><a href={`/category/${s.c.slug}/`}>See all</a></div>
+        <div class="grid">
+          {s.items.map((a) => (
+            <a class="card item" href={`/articles/${a.id}/`}>
+              <strong>{a.data.title}</strong>
+              <span class="meta">{fmt(a.data.pubDate)}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
   </div>
 </BaseLayout>
+<style>
+  .home { padding-top: 2rem; display: grid; gap: 2.5rem; }
+  .hero { display: grid; gap: .75rem; text-decoration: none; color: var(--text); padding: 1.5rem; transition: transform .15s ease; }
+  .hero:hover { transform: translateY(-2px); }
+  .hero h1 { margin: 0; }
+  .lead { color: var(--muted); margin: 0; max-width: var(--read); }
+  .meta { color: var(--muted); font-size: .9rem; }
+  .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .grid { display: grid; gap: 1rem; }
+  .item { display: grid; gap: .6rem; text-decoration: none; color: var(--text); transition: transform .15s ease; }
+  .item:hover { transform: translateY(-2px); }
+  @media (min-width: 760px) { .grid { grid-template-columns: repeat(3, 1fr); } .hero { padding: 2.25rem; } }
+</style>

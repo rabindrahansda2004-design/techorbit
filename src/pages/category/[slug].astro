@@ -1,11 +1,17 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { categories } from '../../data/categories.js';
 
-export function getStaticPaths() {
-  return categories.map((c) => ({ params: { slug: c.slug }, props: { category: c } }));
+export async function getStaticPaths() {
+  const all = (await getCollection('articles', ({ data }) => !data.draft)).sort((a, b) => b.data.pubDate - a.data.pubDate);
+  return categories.map((c) => ({
+    params: { slug: c.slug },
+    props: { category: c, items: all.filter((a) => a.data.category === c.slug) },
+  }));
 }
-const { category } = Astro.props;
+const { category, items } = Astro.props;
+const fmt = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 ---
 <BaseLayout title={`${category.name} | TechOrbit`} description={category.blurb}>
   <div class="wrap" style="padding-top:2.5rem">
@@ -15,8 +21,20 @@ const { category } = Astro.props;
     <span class="tag">Category</span>
     <h1 style="margin-top:1rem">{category.name}</h1>
     <p style="max-width:var(--read);color:var(--muted)">{category.blurb}</p>
-    <div class="card" style="max-width:var(--read)">
-      <p style="margin:0">No articles in this category yet. Check back soon.</p>
+    {items.length === 0 && <div class="card" style="max-width:var(--read)"><p style="margin:0">No articles in this category yet. Check back soon.</p></div>}
+    <div class="list">
+      {items.map((a) => (
+        <a class="card it" href={`/articles/${a.id}/`}>
+          <strong>{a.data.title}</strong>
+          <span style="color:var(--muted)">{a.data.description}</span>
+          <span style="color:var(--muted);font-size:.9rem">{fmt(a.data.pubDate)}</span>
+        </a>
+      ))}
     </div>
   </div>
 </BaseLayout>
+<style>
+  .list { display: grid; gap: 1rem; max-width: var(--read); }
+  .it { display: grid; gap: .5rem; text-decoration: none; color: var(--text); transition: transform .15s ease; }
+  .it:hover { transform: translateY(-2px); }
+</style>
