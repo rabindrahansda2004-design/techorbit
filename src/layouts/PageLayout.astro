@@ -1,0 +1,16 @@
+---
+import BaseLayout from './BaseLayout.astro';
+const { title, description } = Astro.props;
+---
+<BaseLayout title={`${title} | TechOrbit`} description={description}>
+  <div class="wrap page">
+    <h1>{title}</h1>
+    <div class="body"><slot /></div>
+  </div>
+</BaseLayout>
+<style>
+  .page { padding-top: 2.5rem; }
+  .body { max-width: var(--read); }
+  .body :global(h2) { margin-top: 2rem; }
+  .body :global(ul) { padding-left: 1.25rem; }
+</style>

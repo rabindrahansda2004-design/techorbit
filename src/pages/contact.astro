@@ -1,0 +1,16 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import { SITE } from '../data/site.js';
+---
+<PageLayout title="Contact" description="How to contact the TechOrbit editorial team for corrections, questions and feedback.">
+  <p>We welcome corrections, questions and feedback from readers.</p>
+  {SITE.email ? (
+    <p>Email us at <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.</p>
+  ) : (
+    <p>Our contact details are coming soon. Please check back shortly.</p>
+  )}
+  <h2>Reporting a correction</h2>
+  <p>If you think an article contains a mistake, tell us the article title and what should be changed. We review all correction requests and update the article when the correction is confirmed.</p>
+  <h2>Sponsorship and advertising</h2>
+  <p>Any sponsored content on TechOrbit is clearly labeled. Sponsorship never changes our editorial opinions.</p>
+</PageLayout>

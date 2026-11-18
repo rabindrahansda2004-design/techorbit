@@ -5,7 +5,7 @@ import { categories } from '../data/categories.js';
 export async function GET() {
   const all = await getCollection('articles', ({ data }) => !data.draft);
   const urls = [
-    { loc: '/' },
+    { loc: '/' }, { loc: '/about/' }, { loc: '/contact/' }, { loc: '/privacy/' }, { loc: '/terms/' }, { loc: '/editorial-policy/' }, { loc: '/affiliate-disclosure/' },
     ...categories.map((c) => ({ loc: `/category/${c.slug}/` })),
     ...all.map((a) => ({ loc: `/articles/${a.id}/`, lastmod: (a.data.updatedDate ?? a.data.pubDate).toISOString().slice(0, 10) })),
   ];
