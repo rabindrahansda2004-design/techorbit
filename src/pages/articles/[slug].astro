@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { categories } from '../../data/categories.js';
+import { SITE } from '../../data/site.js';
 
 export async function getStaticPaths() {
   const all = await getCollection('articles', ({ data }) => !data.draft);
@@ -17,8 +18,38 @@ const related = all
   .filter((a) => a.id !== entry.id)
   .sort((a, b) => Number(b.data.category === d.category) - Number(a.data.category === d.category) || b.data.pubDate - a.data.pubDate)
   .slice(0, 3);
+
+const url = `${SITE.url}/articles/${entry.id}/`;
+const publisher = { '@type': 'Organization', name: SITE.name, url: SITE.url };
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: d.title,
+    description: d.description,
+    datePublished: d.pubDate.toISOString(),
+    dateModified: (d.updatedDate ?? d.pubDate).toISOString(),
+    author: { '@type': 'Organization', name: SITE.publisher },
+    publisher,
+    mainEntityOfPage: url,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE.url + '/' },
+      { '@type': 'ListItem', position: 2, name: cat?.name ?? 'Category', item: `${SITE.url}/category/${d.category}/` },
+      { '@type': 'ListItem', position: 3, name: d.title, item: url },
+    ],
+  },
+];
+const t = encodeURIComponent(d.title);
+const u = encodeURIComponent(url);
+const whatsapp = `https://wa.me/?text=${t}%20${u}`;
+const xshare = `https://twitter.com/intent/tweet?text=${t}&url=${u}`;
 ---
-<BaseLayout title={`${d.title} | TechOrbit`} description={d.description}>
+<BaseLayout title={`${d.title} | TechOrbit`} description={d.description} ogType="article">
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
   <div id="progress" aria-hidden="true"></div>
   <article class="wrap article">
     <nav aria-label="Breadcrumb" class="crumbs">
@@ -28,6 +59,12 @@ const related = all
     <h1 style="margin-top:1rem">{d.title}</h1>
     <p class="meta">Published {date}</p>
     <div class="prose"><Content /></div>
+    <div class="share">
+      <strong>Share:</strong>
+      <a class="btn ghost" href={whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+      <a class="btn ghost" href={xshare} target="_blank" rel="noopener noreferrer">X</a>
+      <button id="copy" class="btn ghost" type="button">Copy link</button>
+    </div>
     {d.sources.length > 0 && (
       <section class="sources">
         <h2>Sources</h2>
@@ -58,6 +95,16 @@ const related = all
     }
     window.addEventListener('scroll', update, { passive: true });
     update();
+    const copy = document.getElementById('copy');
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(location.href);
+        copy.textContent = 'Copied!';
+      } catch (e) {
+        copy.textContent = 'Press and hold the address bar to copy';
+      }
+      setTimeout(() => { copy.textContent = 'Copy link'; }, 2500);
+    });
   </script>
 </BaseLayout>
 <style>
@@ -68,6 +115,8 @@ const related = all
   .prose { max-width: var(--read); }
   .prose :global(h2) { margin-top: 2rem; }
   .prose :global(ul) { padding-left: 1.25rem; }
+  .share { max-width: var(--read); display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: 2rem; }
+  .share .btn { padding: .5rem 1rem; font: inherit; font-weight: 700; cursor: pointer; }
   .sources { max-width: var(--read); border-top: 1px solid var(--line); margin-top: 2rem; padding-top: 1rem; }
   .related { margin-top: 3rem; }
   .rel-grid { display: grid; gap: 1rem; }
